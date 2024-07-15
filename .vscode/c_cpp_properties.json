@@ -1,0 +1,20 @@
+{
+    "configurations": [
+      {
+        "name": "Win32",
+        "includePath": [
+          "${workspaceFolder}/**",
+          "${VULKAN_SDK}/**",
+          "C:/tools/flutter/bin/cache/artifacts/engine/**",
+          "C:/tools/flutter/bin/cache/artifacts/engine/windows-x64/**",
+          "C:/tools/flutter/bin/cache/dart-sdk/bin/**"
+        ],
+        "defines": [],
+        "cStandard": "c11",
+        "cppStandard": "c++20",
+        "intelliSenseMode": "clang-x64"
+      }
+    ],
+    "version": 4
+  }
+  
