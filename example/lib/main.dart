@@ -17,7 +17,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   final _gpuInfoPlugin = GpuInfo();
-  GpuInfoStruct _gpuInfo = GpuInfoStruct('', '', '', 0);
+  final List<GpuInfoStruct> _gpusInfo = [];
 
   @override
   void initState() {
@@ -26,14 +26,14 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> initPlatformState() async {
-    GpuInfoStruct gpuInfo;
+    List<GpuInfoStruct> gpusInfo;
 
     if (!mounted) return;
 
-    gpuInfo = await _gpuInfoPlugin.getGpuInfo();
+    gpusInfo = await _gpuInfoPlugin.getGpusInfo();
 
     setState(() {
-      _gpuInfo = gpuInfo;
+      _gpusInfo.addAll(gpusInfo);
     });
   }
 
@@ -45,14 +45,36 @@ class _MyAppState extends State<MyApp> {
           title: const Text('Plugin example app'),
         ),
         body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text('Your GPU: ${_gpuInfo.deviceName}'),
-              Text('Vendor: ${_gpuInfo.vendorName}'),
-              Text('Driver version: ${_gpuInfo.driverVersion}'),
-              Text('Memory: ${_gpuInfo.memoryAmount} MB'),
-            ],
+          child: Container(
+            padding: const EdgeInsets.all(32),
+            height: 300,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: _gpusInfo.length,
+              itemBuilder: (context, index) {
+                return Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        Text(
+                          'Your GPU: ${_gpusInfo[index].deviceName}',
+                        ),
+                        Text(
+                          'Vendor: ${_gpusInfo[index].vendorName}',
+                        ),
+                        Text(
+                          'Driver version: ${_gpusInfo[index].driverVersion}',
+                        ),
+                        Text(
+                          'Memory: ${_gpusInfo[index].memoryAmount} MB',
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ),

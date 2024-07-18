@@ -11,11 +11,7 @@ class GpuInfoStruct {
     this.memoryAmount,
   );
 
-  factory GpuInfoStruct.fromMap(Map<String, dynamic>? map) {
-    if (map == null) {
-      return GpuInfoStruct('', '', '', 0);
-    }
-
+  factory GpuInfoStruct.fromMap(Map<String, dynamic> map) {
     return GpuInfoStruct(
       map['deviceName'] as String,
       map['vendorName'] as String,

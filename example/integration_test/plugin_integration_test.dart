@@ -17,7 +17,7 @@ void main() {
 
   testWidgets('getPlatformVersion test', (WidgetTester tester) async {
     final GpuInfo plugin = GpuInfo();
-    final info = await plugin.getGpuInfo();
+    final info = await plugin.getGpusInfo();
     expect(info, true);
   });
 }

@@ -6,6 +6,7 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
+#include "gpu_info.hpp"
 #include "vulkan_instance.hpp"
 
 namespace gpu_info
@@ -21,6 +22,14 @@ struct VulkanQueueFamilySupportDetails
     }
 };
 
+struct VulkanDeviceProperties
+{
+    std::string vendorName;
+    std::string deviceName;
+    std::string driverVersion;
+    int memoryAmount;
+};
+
 struct VulkanDevice
 {
     VkPhysicalDevice physicalDevice;
@@ -33,14 +42,11 @@ struct VulkanDevice
     std::vector<const char *> requiredLayers;
     std::vector<const char *> availableLayers;
 
-    std::string vendorName;
-    std::string deviceName;
-    std::string driverVersion;
-    int memoryAmount;
+    std::vector<VulkanDeviceProperties> devicesProperties;
 
     VulkanDevice()
         : physicalDevice(VK_NULL_HANDLE), device(VK_NULL_HANDLE), graphicsQueue(VK_NULL_HANDLE),
-          presentQueue(VK_NULL_HANDLE), memoryAmount(0)
+          presentQueue(VK_NULL_HANDLE)
     {
         requiredExtensions = {
             VK_KHR_SWAPCHAIN_EXTENSION_NAME,
@@ -53,19 +59,19 @@ struct VulkanDevice
     }
 };
 
-void CreateVulkanDevice(VulkanDevice &_device, const VulkanInstance &_instance);
-
-void DestroyVulkanDevice(VulkanDevice &_device);
-
 VulkanQueueFamilySupportDetails FindVulkanDeviceQueueFamiliesSupport(const VkPhysicalDevice &_device);
 
 uint16_t GetVulkanDeviceScore(const VkPhysicalDevice &_device);
 
-VkPhysicalDevice PickVulkanPhysicalDevice(const VulkanInstance &_instance);
-
 void CheckVulkanDeviceExtensionsSupport(VulkanDevice &_device);
 
 void CheckVulkanDeviceLayersSupport(VulkanDevice &_device);
+
+std::vector<VkPhysicalDevice> EnumerateVulkanPhysicalDevices(const VulkanInstance &_instance);
+
+void PopulateVulkanDeviceProperties(const VkPhysicalDevice &physicalDevice, VulkanDeviceProperties &deviceProperties);
+
+std::vector<GpuInfoStruct> ListAllVulkanDevices(const VulkanInstance &_instance);
 
 inline std::string GetVulkanDeviceTypeString(VkPhysicalDeviceType _type)
 {

@@ -7,101 +7,6 @@
 namespace gpu_info
 {
 
-void CreateVulkanDevice(VulkanDevice &_device, const VulkanInstance &_instance)
-{
-    VkPhysicalDevice physicalDevice = PickVulkanPhysicalDevice(_instance);
-
-    CheckVulkanDeviceExtensionsSupport(_device);
-
-    for (const auto &extension : _device.availableExtensions)
-    {
-        std::cout << "INFO: Enabled Vulkan device extension: " << extension << std::endl;
-    }
-
-    CheckVulkanDeviceLayersSupport(_device);
-
-    for (const auto &layer : _device.availableLayers)
-    {
-        std::cout << "INFO: Enabled Vulkan device layer: " << layer << std::endl;
-    }
-
-    _device.physicalDevice = physicalDevice;
-
-    auto indices = FindVulkanDeviceQueueFamiliesSupport(physicalDevice);
-
-    std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-    std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily.value()};
-
-    float queuePriority = 1.0f;
-
-    for (uint32_t queueFamily : uniqueQueueFamilies)
-    {
-        VkDeviceQueueCreateInfo queueCreateInfo{};
-        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        queueCreateInfo.queueFamilyIndex = queueFamily;
-        queueCreateInfo.queueCount = 1;
-        queueCreateInfo.pQueuePriorities = &queuePriority;
-        queueCreateInfos.push_back(queueCreateInfo);
-    }
-
-    constexpr VkPhysicalDeviceFeatures deviceFeatures{
-        .geometryShader = true,
-        .sampleRateShading = true,
-        .multiDrawIndirect = true,
-        .fillModeNonSolid = true,
-        .multiViewport = true,
-        .samplerAnisotropy = true,
-    };
-
-    const VkDeviceCreateInfo deviceCreateInfo = {
-        .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-        .queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size()),
-        .pQueueCreateInfos = queueCreateInfos.data(),
-        .enabledLayerCount = static_cast<uint32_t>(_device.availableLayers.size()),
-        .ppEnabledLayerNames = _device.availableLayers.data(),
-        .enabledExtensionCount = static_cast<uint32_t>(_device.availableExtensions.size()),
-        .ppEnabledExtensionNames = _device.availableExtensions.data(),
-        .pEnabledFeatures = &deviceFeatures,
-    };
-
-    if (vkCreateDevice(_device.physicalDevice, &deviceCreateInfo, nullptr, &_device.device) != VK_SUCCESS)
-    {
-        throw std::runtime_error("Failed to create Vulkan device!");
-    }
-
-    vkGetDeviceQueue(_device.device, indices.graphicsFamily.value(), 0, &_device.graphicsQueue);
-
-    // Populate new fields with device information
-    VkPhysicalDeviceProperties deviceProperties;
-    vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
-    VkPhysicalDeviceMemoryProperties memoryProperties;
-    vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memoryProperties);
-
-    std::ostringstream driverVersionStream;
-    driverVersionStream << VK_VERSION_MAJOR(deviceProperties.driverVersion) << "."
-                        << VK_VERSION_MINOR(deviceProperties.driverVersion) << "."
-                        << VK_VERSION_PATCH(deviceProperties.driverVersion);
-
-    _device.vendorName = deviceProperties.deviceName;
-    _device.deviceName = GetVulkanDeviceVendorNameString(deviceProperties.vendorID);
-    _device.driverVersion = driverVersionStream.str();
-    _device.memoryAmount = 0;
-
-    for (uint32_t i = 0; i < memoryProperties.memoryHeapCount; ++i)
-    {
-        if (memoryProperties.memoryHeaps[i].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT)
-        {
-            _device.memoryAmount += (int)(memoryProperties.memoryHeaps[i].size / (1024 * 1024)); // Convert to MB
-        }
-    }
-}
-
-void DestroyVulkanDevice(VulkanDevice &_device)
-{
-    if (_device.device != VK_NULL_HANDLE)
-        vkDestroyDevice(_device.device, nullptr);
-}
-
 VulkanQueueFamilySupportDetails FindVulkanDeviceQueueFamiliesSupport(const VkPhysicalDevice &_device)
 {
     VulkanQueueFamilySupportDetails indices;
@@ -162,41 +67,6 @@ uint16_t GetVulkanDeviceScore(const VkPhysicalDevice &_physicalDevice)
     totalDeviceMemory /= 1024 * 1024;
 
     return score;
-}
-
-VkPhysicalDevice PickVulkanPhysicalDevice(const VulkanInstance &_instance)
-{
-    uint32_t deviceCount = 0;
-    vkEnumeratePhysicalDevices(_instance.instance, &deviceCount, nullptr);
-
-    if (deviceCount == 0)
-    {
-        throw std::runtime_error("Failed to find GPUs with Vulkan support!");
-    }
-
-    std::vector<VkPhysicalDevice> devices(deviceCount);
-    vkEnumeratePhysicalDevices(_instance.instance, &deviceCount, devices.data());
-
-    uint32_t highestScore = 0;
-    VkPhysicalDevice physicalDevice = nullptr;
-
-    for (const auto &device : devices)
-    {
-        VkPhysicalDeviceProperties deviceProperties;
-        vkGetPhysicalDeviceProperties(device, &deviceProperties);
-
-        if (GetVulkanDeviceScore(device) >= highestScore)
-        {
-            physicalDevice = device;
-        }
-    }
-
-    if (physicalDevice == nullptr)
-    {
-        throw std::runtime_error("Failed to find a suitable GPU!");
-    }
-
-    return physicalDevice;
 }
 
 void CheckVulkanDeviceExtensionsSupport(VulkanDevice &_device)
@@ -263,6 +133,67 @@ void CheckVulkanDeviceLayersSupport(VulkanDevice &_device)
             throw std::runtime_error("Required Vulkan device layer is not supported!");
         }
     }
+}
+
+std::vector<VkPhysicalDevice> EnumerateVulkanPhysicalDevices(const VulkanInstance &_instance)
+{
+    uint32_t deviceCount = 0;
+    vkEnumeratePhysicalDevices(_instance.instance, &deviceCount, nullptr);
+
+    if (deviceCount == 0)
+    {
+        throw std::runtime_error("Failed to find GPUs with Vulkan support!");
+    }
+
+    std::vector<VkPhysicalDevice> devices(deviceCount);
+    vkEnumeratePhysicalDevices(_instance.instance, &deviceCount, devices.data());
+
+    return devices;
+}
+
+void PopulateVulkanDeviceProperties(const VkPhysicalDevice &physicalDevice, VulkanDeviceProperties &deviceProperties)
+{
+    VkPhysicalDeviceProperties vkDeviceProperties;
+    vkGetPhysicalDeviceProperties(physicalDevice, &vkDeviceProperties);
+
+    VkPhysicalDeviceMemoryProperties memoryProperties;
+    vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memoryProperties);
+
+    std::ostringstream driverVersionStream;
+    driverVersionStream << VK_VERSION_MAJOR(vkDeviceProperties.driverVersion) << "."
+                        << VK_VERSION_MINOR(vkDeviceProperties.driverVersion) << "."
+                        << VK_VERSION_PATCH(vkDeviceProperties.driverVersion);
+
+    deviceProperties.vendorName = GetVulkanDeviceVendorNameString(vkDeviceProperties.vendorID);
+    deviceProperties.deviceName = vkDeviceProperties.deviceName;
+    deviceProperties.driverVersion = driverVersionStream.str();
+    deviceProperties.memoryAmount = 0;
+
+    for (uint32_t i = 0; i < memoryProperties.memoryHeapCount; ++i)
+    {
+        if (memoryProperties.memoryHeaps[i].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT)
+        {
+            deviceProperties.memoryAmount +=
+                (int)(memoryProperties.memoryHeaps[i].size / (1024 * 1024)); // Convert to MB
+        }
+    }
+}
+
+std::vector<GpuInfoStruct> ListAllVulkanDevices(const VulkanInstance &_instance)
+{
+    std::vector<GpuInfoStruct> devicesInfo;
+    std::vector<VkPhysicalDevice> devices = EnumerateVulkanPhysicalDevices(_instance);
+
+    for (const auto &device : devices)
+    {
+        VulkanDeviceProperties properties;
+        PopulateVulkanDeviceProperties(device, properties);
+
+        devicesInfo.push_back(
+            {properties.vendorName, properties.deviceName, properties.driverVersion, properties.memoryAmount});
+    }
+
+    return devicesInfo;
 }
 
 } // namespace gpu_info

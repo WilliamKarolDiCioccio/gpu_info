@@ -18,7 +18,7 @@ abstract class GpuInfoPlatform extends PlatformInterface {
     _instance = instance;
   }
 
-  Future<GpuInfoStruct> getGpuInfo() {
+  Future<List<GpuInfoStruct>> getGpusInfo() {
     throw UnimplementedError('getGpuInfo() has not been implemented.');
   }
 }

@@ -1,5 +1,7 @@
 # 🚀 gpu_info
 
+![Screenshot](https://github.com/WilliamKarolDiCioccio/gpu_info/blob/main/.github/images/screenshot.png)
+
 The `gpu_info` Dart package allows you to query detailed GPU-related information using the Vulkan API. This package will soon support all platforms! 🌍
 
 ### 📢 Note:

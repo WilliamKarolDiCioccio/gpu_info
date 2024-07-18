@@ -25,6 +25,6 @@ void main() {
   });
 
   test('getGpuInfo', () async {
-    expect(await platform.getGpuInfo(), GpuInfoStruct('', '', '', 0));
+    expect(await platform.getGpusInfo(), GpuInfoStruct('', '', '', 0));
   });
 }

@@ -11,7 +11,7 @@
 #include <memory>
 #include <sstream>
 
-#include "gpu_info.h"
+#include "gpu_info.hpp"
 #include "vulkan_device.hpp"
 #include "vulkan_instance.hpp"
 
@@ -43,45 +43,45 @@ GpuInfoPlugin::~GpuInfoPlugin()
 void GpuInfoPlugin::HandleMethodCall(const flutter::MethodCall<flutter::EncodableValue> &method_call,
                                      std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result)
 {
-    if (method_call.method_name().compare("getGpuInfo") == 0)
+    if (method_call.method_name().compare("getGpusInfo") == 0)
     {
-        GPUInfo gpuInfo;
-
         VulkanInstance vulkanInstance;
         CreateVulkanInstance(vulkanInstance);
 
-        VulkanDevice vulkanDevice;
-        CreateVulkanDevice(vulkanDevice, vulkanInstance);
+        auto devicesInfo = ListAllVulkanDevices(vulkanInstance);
 
-        gpuInfo.deviceName = vulkanDevice.deviceName;
-        gpuInfo.vendorName = vulkanDevice.vendorName;
-        gpuInfo.driverVersion = vulkanDevice.driverVersion;
-        gpuInfo.memoryAmount = vulkanDevice.memoryAmount;
+        flutter::EncodableList encodableList;
 
-        std::map<std::string, std::any> gpuInfoMap = gpuInfo.toMap();
-
-        flutter::EncodableMap encodableMap;
-
-        for (const auto &[key, value] : gpuInfoMap)
+        for (const auto &element : devicesInfo)
         {
-            if (value.type() == typeid(std::string))
+            flutter::EncodableMap encodableMap;
+
+            auto deviceMap = element.toMap();
+            for (const auto &[key, value] : deviceMap)
             {
-                encodableMap[flutter::EncodableValue(key)] = flutter::EncodableValue(std::any_cast<std::string>(value));
+                std::string keyStr = std::any_cast<std::string>(key);
+                if (value.type() == typeid(std::string))
+                {
+                    encodableMap[flutter::EncodableValue(keyStr)] =
+                        flutter::EncodableValue(std::any_cast<std::string>(value));
+                }
+                else if (value.type() == typeid(int))
+                {
+                    encodableMap[flutter::EncodableValue(keyStr)] = flutter::EncodableValue(std::any_cast<int>(value));
+                }
+                else if (value.type() == typeid(float))
+                {
+                    encodableMap[flutter::EncodableValue(keyStr)] =
+                        flutter::EncodableValue(std::any_cast<float>(value));
+                }
             }
-            else if (value.type() == typeid(int))
-            {
-                encodableMap[flutter::EncodableValue(key)] = flutter::EncodableValue(std::any_cast<int>(value));
-            }
-            else if (value.type() == typeid(float))
-            {
-                encodableMap[flutter::EncodableValue(key)] = flutter::EncodableValue(std::any_cast<float>(value));
-            }
+
+            encodableList.push_back(encodableMap);
         }
 
-        DestroyVulkanDevice(vulkanDevice);
         DestroyVulkanInstance(vulkanInstance);
 
-        result->Success(encodableMap);
+        result->Success(flutter::EncodableValue(encodableList));
     }
     else
     {

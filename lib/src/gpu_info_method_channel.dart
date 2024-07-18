@@ -10,20 +10,31 @@ class MethodChannelGpuInfo extends GpuInfoPlatform {
   final methodChannel = const MethodChannel('gpu_info');
 
   @override
-  Future<GpuInfoStruct> getGpuInfo() async {
-    final result = await methodChannel.invokeMethod<Map<dynamic, dynamic>?>('getGpuInfo');
-    
-    if (result == null) {
+  Future<List<GpuInfoStruct>> getGpusInfo() async {
+    final results = await methodChannel.invokeMethod<dynamic>('getGpusInfo');
+
+    if (results == null) {
       throw PlatformException(
-          code: 'NULL_RESULT',
-          message: 'Received null result from method channel.',
+        code: 'NULL_RESULT',
+        message: 'Received null result from method channel.',
       );
     }
 
-    final Map<String, dynamic> castedResult = result.map(
-      (key, value) => MapEntry(key as String, value),
-    );
+    final List<GpuInfoStruct> castedResult = [];
 
-    return GpuInfoStruct.fromMap(castedResult);
+    for (final element in results) {
+      if (element is Map) {
+        castedResult.add(
+          GpuInfoStruct.fromMap(Map<String, dynamic>.from(element)),
+        );
+      } else {
+        throw PlatformException(
+          code: 'INVALID_RESULT',
+          message: 'Received invalid result from method channel.',
+        );
+      }
+    }
+
+    return castedResult;
   }
 }

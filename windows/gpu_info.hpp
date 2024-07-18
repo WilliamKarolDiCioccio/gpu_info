@@ -1,3 +1,5 @@
+#pragma once
+
 #include <map>
 #include <any>
 #include <string>
@@ -5,7 +7,7 @@
 namespace gpu_info
 {
 
-    struct GPUInfo
+    struct GpuInfoStruct
     {
         std::string vendorName;
         std::string deviceName;
@@ -18,7 +20,8 @@ namespace gpu_info
                 {"deviceName", deviceName},
                 {"vendorName", vendorName},
                 {"driverVersion", driverVersion},
-                {"memoryAmount", memoryAmount}};
+                {"memoryAmount", memoryAmount}
+            };
         }
     };
 
