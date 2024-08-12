@@ -1,6 +1,6 @@
 name: gpu_info
 description: "A Flutter plugin to access GPU information."
-version: 0.0.2
+version: 0.0.3
 repository: 'https://github.com/WilliamKarolDiCioccio/gpu_info'
 issue_tracker: 'https://github.com/WilliamKarolDiCioccio/gpu_info/issues'
 
