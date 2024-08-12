@@ -16,6 +16,59 @@ dependencies:
   gpu_info: ^0.1.0
 ```
 
+### Vulkan SDK Installation
+
+To build the `gpu_info` package, you'll need the Vulkan SDK installed on your system. Below are the commands to install the Vulkan SDK on different platforms:
+
+#### **Windows**
+
+Install the Vulkan SDK using `winget`:
+
+```sh
+winget install LunarG.VulkanSDK
+```
+
+Alternatively, you can download and install it directly from the [LunarG Vulkan SDK website](https://vulkan.lunarg.com/sdk/home).
+
+#### **Linux**
+
+For Ubuntu or Debian-based distributions, use `apt`:
+
+```sh
+sudo apt update
+sudo apt install vulkan-sdk
+```
+
+For Fedora:
+
+```sh
+sudo dnf install vulkan-tools vulkan-loader-devel
+```
+
+For Arch Linux:
+
+```sh
+sudo pacman -S vulkan-tools vulkan-headers vulkan-validation-layers
+```
+
+#### **macOS**
+
+Install the Vulkan SDK using `brew`:
+
+```sh
+brew install --cask vulkan-sdk
+```
+
+### Verifying the Installation
+
+After installing the Vulkan SDK, you can verify the installation by running:
+
+```sh
+vulkaninfo
+```
+
+This command should output detailed information about your Vulkan setup, indicating that the SDK has been correctly installed.
+
 ## 🚀 Example
 
 Here is a simple example of how to use the `gpu_info` package to retrieve and display GPU information in a Flutter app.
