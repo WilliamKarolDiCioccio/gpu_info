@@ -22,14 +22,6 @@ struct VulkanQueueFamilySupportDetails
     }
 };
 
-struct VulkanDeviceProperties
-{
-    std::string vendorName;
-    std::string deviceName;
-    std::string driverVersion;
-    int memoryAmount;
-};
-
 struct VulkanDevice
 {
     VkPhysicalDevice physicalDevice;
@@ -42,7 +34,7 @@ struct VulkanDevice
     std::vector<const char *> requiredLayers;
     std::vector<const char *> availableLayers;
 
-    std::vector<VulkanDeviceProperties> devicesProperties;
+    std::vector<GpuInfoStruct> devicesProperties;
 
     VulkanDevice()
         : physicalDevice(VK_NULL_HANDLE), device(VK_NULL_HANDLE), graphicsQueue(VK_NULL_HANDLE),
@@ -69,9 +61,9 @@ void CheckVulkanDeviceLayersSupport(VulkanDevice &_device);
 
 std::vector<VkPhysicalDevice> EnumerateVulkanPhysicalDevices(const VulkanInstance &_instance);
 
-void PopulateVulkanDeviceProperties(const VkPhysicalDevice &physicalDevice, VulkanDeviceProperties &deviceProperties);
+GpuInfoStruct PopulateDeviceInfos(const VkPhysicalDevice &physicalDevice);
 
-std::vector<GpuInfoStruct> ListAllVulkanDevices(const VulkanInstance &_instance);
+std::vector<GpuInfoStruct> GetAllVulkanDevices(const VulkanInstance &_instance);
 
 inline std::string GetVulkanDeviceTypeString(VkPhysicalDeviceType _type)
 {

@@ -13,6 +13,7 @@ namespace gpu_info
         std::string deviceName;
         std::string driverVersion;
         int memoryAmount;
+        int deviceScore;
 
         std::map<std::string, std::any> toMap() const
         {
@@ -20,7 +21,8 @@ namespace gpu_info
                 {"deviceName", deviceName},
                 {"vendorName", vendorName},
                 {"driverVersion", driverVersion},
-                {"memoryAmount", memoryAmount}
+                {"memoryAmount", memoryAmount},
+                {"deviceScore", deviceScore},
             };
         }
     };

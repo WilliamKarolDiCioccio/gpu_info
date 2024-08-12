@@ -151,47 +151,77 @@ std::vector<VkPhysicalDevice> EnumerateVulkanPhysicalDevices(const VulkanInstanc
     return devices;
 }
 
-void PopulateVulkanDeviceProperties(const VkPhysicalDevice &physicalDevice, VulkanDeviceProperties &deviceProperties)
+GpuInfoStruct PopulateDeviceInfos(const VkPhysicalDevice &physicalDevice)
 {
+    GpuInfoStruct infos;
+
+    // Retrieve device properties
     VkPhysicalDeviceProperties vkDeviceProperties;
     vkGetPhysicalDeviceProperties(physicalDevice, &vkDeviceProperties);
 
+    // Retrieve device memory properties
     VkPhysicalDeviceMemoryProperties memoryProperties;
     vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memoryProperties);
 
+    // Convert driver version to string
     std::ostringstream driverVersionStream;
     driverVersionStream << VK_VERSION_MAJOR(vkDeviceProperties.driverVersion) << "."
                         << VK_VERSION_MINOR(vkDeviceProperties.driverVersion) << "."
                         << VK_VERSION_PATCH(vkDeviceProperties.driverVersion);
 
-    deviceProperties.vendorName = GetVulkanDeviceVendorNameString(vkDeviceProperties.vendorID);
-    deviceProperties.deviceName = vkDeviceProperties.deviceName;
-    deviceProperties.driverVersion = driverVersionStream.str();
-    deviceProperties.memoryAmount = 0;
+    // Populate basic device info
+    infos.vendorName = GetVulkanDeviceVendorNameString(vkDeviceProperties.vendorID);
+    infos.deviceName = vkDeviceProperties.deviceName;
+    infos.driverVersion = driverVersionStream.str();
+    infos.memoryAmount = 0;
 
+    // Accumulate the total memory amount (in MB) from all device-local memory heaps
     for (uint32_t i = 0; i < memoryProperties.memoryHeapCount; ++i)
     {
         if (memoryProperties.memoryHeaps[i].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT)
         {
-            deviceProperties.memoryAmount +=
-                (int)(memoryProperties.memoryHeaps[i].size / (1024 * 1024)); // Convert to MB
+            infos.memoryAmount += static_cast<int>(memoryProperties.memoryHeaps[i].size / (1024 * 1024)); // Convert to MB
         }
     }
+
+    // Compute a simple score for the GPU based on various properties
+    infos.deviceScore = 0;
+
+    // Example scoring criteria
+    infos.deviceScore += infos.memoryAmount; // Memory size contributes directly to the score
+
+    // Adjust score based on device type (Discrete GPUs might score higher)
+    if (vkDeviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+    {
+        infos.deviceScore += 1000;
+    }
+    else if (vkDeviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
+    {
+        infos.deviceScore += 500;
+    }
+    else if (vkDeviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU)
+    {
+        infos.deviceScore += 300;
+    }
+    else if (vkDeviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_CPU)
+    {
+        infos.deviceScore += 100;
+    }
+
+    // Optionally, incorporate the Vulkan API version supported by the device
+    infos.deviceScore += VK_VERSION_MAJOR(vkDeviceProperties.apiVersion) * 100;
+    infos.deviceScore += VK_VERSION_MINOR(vkDeviceProperties.apiVersion) * 10;
+    infos.deviceScore += VK_VERSION_PATCH(vkDeviceProperties.apiVersion);
+
+    return infos;
 }
 
-std::vector<GpuInfoStruct> ListAllVulkanDevices(const VulkanInstance &_instance)
+std::vector<GpuInfoStruct> GetAllVulkanDevices(const VulkanInstance &_instance)
 {
     std::vector<GpuInfoStruct> devicesInfo;
     std::vector<VkPhysicalDevice> devices = EnumerateVulkanPhysicalDevices(_instance);
 
-    for (const auto &device : devices)
-    {
-        VulkanDeviceProperties properties;
-        PopulateVulkanDeviceProperties(device, properties);
-
-        devicesInfo.push_back(
-            {properties.vendorName, properties.deviceName, properties.driverVersion, properties.memoryAmount});
-    }
+    for (const auto &device : devices) devicesInfo.push_back(PopulateDeviceInfos(device));
 
     return devicesInfo;
 }

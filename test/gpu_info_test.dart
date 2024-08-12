@@ -10,7 +10,7 @@ class MockGpuInfoPlatform
     implements GpuInfoPlatform {
   @override
   Future<List<GpuInfoStruct>> getGpusInfo() {
-    return Future.value([GpuInfoStruct('', '', '', 0)]);
+    return Future.value([GpuInfoStruct('', '', '', 0, 0)]);
   }
 }
 
@@ -26,6 +26,7 @@ void main() {
     MockGpuInfoPlatform fakePlatform = MockGpuInfoPlatform();
     GpuInfoPlatform.instance = fakePlatform;
 
-    expect(await gpuInfoPlugin.getGpusInfo(), [GpuInfoStruct('', '', '', 0)]);
+    expect(
+        await gpuInfoPlugin.getGpusInfo(), [GpuInfoStruct('', '', '', 0, 0)]);
   });
 }

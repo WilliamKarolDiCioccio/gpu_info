@@ -48,7 +48,7 @@ void GpuInfoPlugin::HandleMethodCall(const flutter::MethodCall<flutter::Encodabl
         VulkanInstance vulkanInstance;
         CreateVulkanInstance(vulkanInstance);
 
-        auto devicesInfo = ListAllVulkanDevices(vulkanInstance);
+        auto devicesInfo = GetAllVulkanDevices(vulkanInstance);
 
         flutter::EncodableList encodableList;
 

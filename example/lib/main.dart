@@ -69,6 +69,9 @@ class _MyAppState extends State<MyApp> {
                         Text(
                           'Memory: ${_gpusInfo[index].memoryAmount} MB',
                         ),
+                        Text(
+                          'Score: ${_gpusInfo[index].deviceScore}',
+                        ),
                       ],
                     ),
                   ),
